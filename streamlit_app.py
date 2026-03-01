@@ -199,7 +199,6 @@ HTML = r"""
         <h1>Review → Prediksi Bintang (1–5)</h1>
         <div class="subtitle">
           Prototype front-end untuk memprediksi rating Yelp dari teks review + metadata.
-          <span class="mono">Dummy mode</span> (selalu 4★).
         </div>
       </div>
       <div class="badge" id="modeBadge">MODE: <span id="modeText">OFFLINE-DUMMY</span></div>
@@ -399,3 +398,4 @@ HTML = r"""
 
 # Height bisa kamu naik/turunin sesuai kebutuhan
 components.html(HTML, height=860, scrolling=True)
+
