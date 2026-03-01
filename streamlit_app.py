@@ -4,16 +4,16 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Review → Prediksi Bintang (Prototype)",
+    page_title="Review → Star Prediction (Prototype)",
     page_icon="⭐",
     layout="wide",
 )
 
-# Optional: kalau nanti mau sambung API, set via Streamlit Cloud Secrets / env var
+# Optional: later connect to a real backend by setting API_URL in Streamlit secrets/env
 API_URL = os.getenv("API_URL", "").strip()
-API_URL_JS = json.dumps(API_URL)  # aman untuk disisipkan ke JS sebagai string
+API_URL_JS = json.dumps(API_URL)  # safely inject into JS
 
-# Full-bleed layout (hapus padding streamlit)
+# Full-bleed layout (remove Streamlit padding)
 st.markdown(
     """
     <style>
@@ -26,11 +26,11 @@ st.markdown(
 
 HTML = """
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Review → Prediksi Bintang (Prototype)</title>
+  <title>Review → Star Prediction (Prototype)</title>
   <style>
     :root{
       --bg:#0b1220; --card:#111a2e; --muted:#8ea0c7; --text:#e9efff;
@@ -227,20 +227,20 @@ HTML = """
   <div class="wrap">
     <header>
       <div class="title">
-        <h1>Review → Prediksi Bintang (1–5)</h1>
+        <h1>Review → Star Prediction (1–5)</h1>
         <div class="subtitle">
-          Prototype front-end untuk memprediksi rating Yelp dari teks review + metadata.
-          <span class="mono">Rule-based</span> (seakan model).
+          Prototype UI for predicting Yelp-like star ratings from review text + metadata.
+          <span class="mono">Rule-based</span> (model-like behavior).
         </div>
       </div>
-      <div class="badge" id="modeBadge">MODE: <span id="modeText">-</span></div>
+      <div class="badge">MODE: <span id="modeText">-</span></div>
     </header>
 
     <div class="grid">
       <!-- Left: Input -->
       <div class="card">
-        <h2>Input Review</h2>
-        <textarea id="reviewText" placeholder="Tempel / ketik review di sini..."></textarea>
+        <h2>Review Input</h2>
+        <textarea id="reviewText" placeholder="Paste / type your review here..."></textarea>
 
         <div class="row">
           <div class="field">
@@ -262,22 +262,22 @@ HTML = """
         </div>
 
         <div class="btns">
-          <button id="predictBtn">Prediksi Bintang</button>
-          <button class="secondary" id="fillExampleBtn">Isi Contoh</button>
+          <button id="predictBtn">Predict Stars</button>
+          <button class="secondary" id="fillExampleBtn">Fill Example</button>
           <button class="secondary" id="clearBtn">Reset</button>
         </div>
 
-        <div class="status" id="status">
+        <div class="status">
           <span class="dot" id="statusDot"></span>
-          <span id="statusText">Siap. Klik “Prediksi Bintang”.</span>
+          <span id="statusText">Ready. Click “Predict Stars”.</span>
         </div>
 
         <div class="hr"></div>
         <div class="small">
           <div class="pill">API_URL: <span id="apiUrlText">-</span></div>
           <div class="note">
-            Jika <span class="mono">API_URL</span> di-set, tombol akan memanggil API backend.
-            Kalau tidak, prediksi menggunakan heuristic rule-based.
+            If <span class="mono">API_URL</span> is set, the button will call your backend API.
+            Otherwise, it uses an offline heuristic “pseudo model”.
           </div>
         </div>
       </div>
@@ -285,15 +285,15 @@ HTML = """
       <!-- Right: Output -->
       <div class="card">
         <div class="resultTop">
-          <h2 style="margin:0">Hasil Prediksi</h2>
+          <h2 style="margin:0">Prediction Result</h2>
           <div class="scoreBox" id="modelBox">model: -</div>
         </div>
 
         <div class="stars" id="starsRow" aria-label="Predicted stars"></div>
         <div class="bars" id="probBars"></div>
 
-        <div class="note" id="explain">
-          Output menampilkan prediksi bintang dan pseudo “confidence distribution”.
+        <div class="note">
+          Displays predicted stars and a pseudo confidence distribution.
         </div>
 
         <div class="explainBox" id="explainBox">details: -</div>
@@ -302,9 +302,8 @@ HTML = """
   </div>
 
   <script>
-    // Injected safely from Streamlit/Python:
+    // Injected from Python safely:
     const API_URL = __API_URL_JS__;
-
     const MODE = API_URL ? "API" : "OFFLINE-HEURISTIC";
 
     // UI refs
@@ -329,7 +328,7 @@ HTML = """
     const elExplainBox = document.getElementById("explainBox");
 
     elModeText.textContent = MODE;
-    elApiUrlText.textContent = API_URL || "Tidak diset";
+    elApiUrlText.textContent = API_URL || "Not set";
 
     function setStatus(type, msg){
       elStatusDot.className = "dot";
@@ -376,7 +375,7 @@ HTML = """
       elProbBars.innerHTML = html;
     }
 
-    // ---------- Rule-based "pseudo model"
+    // -------- Rule-based "pseudo model"
     const POS = {
       "amazing":2.2,"awesome":2.1,"excellent":2.2,"perfect":2.2,"fantastic":2.1,"wonderful":2.0,"superb":2.0,
       "love":2.0,"loved":2.0,"lovely":1.7,"best":1.8,"great":1.6,"good":1.1,"nice":1.0,
@@ -395,8 +394,8 @@ HTML = """
     function tokenize(text){
       return (text||"")
         .toLowerCase()
-        .replace(/[^a-z0-9\s']/g, " ")
-        .split(/\s+/)
+        .replace(/[^a-z0-9\\s']/g, " ")
+        .split(/\\s+/)
         .filter(Boolean);
     }
     function softmax(arr){
@@ -413,7 +412,7 @@ HTML = """
       const n = tokens.length;
 
       const excl = (text.match(/!/g) || []).length;
-      const quest = (text.match(/\?/g) || []).length;
+      const quest = (text.match(/\\?/g) || []).length;
 
       const v_use = Math.log1p(payload.useful || 0);
       const v_fun = Math.log1p(payload.funny || 0);
@@ -512,11 +511,11 @@ E[stars]=${expStar.toFixed(3)}  maxP=${Math.max(...probs).toFixed(3)}`;
     elPredictBtn.addEventListener("click", async () => {
       const payload = getPayload();
       if(!payload.text){
-        setStatus("bad", "Review text masih kosong.");
+        setStatus("bad", "Review text is empty.");
         return;
       }
 
-      setStatus("work", "Memproses prediksi...");
+      setStatus("work", "Running prediction...");
       elPredictBtn.disabled = true;
 
       try{
@@ -534,10 +533,10 @@ E[stars]=${expStar.toFixed(3)}  maxP=${Math.max(...probs).toFixed(3)}`;
         const stars = clampStars(out.stars);
         renderStars(stars);
         renderBars(out.probs || [0,0,0,0,1]);
-        setStatus("ok", API_URL ? "Prediksi dari API berhasil." : "Prediksi heuristic selesai.");
+        setStatus("ok", API_URL ? "API prediction succeeded." : "Heuristic prediction completed.");
       } catch(err){
         console.error(err);
-        setStatus("bad", `Gagal: ${err.message}`);
+        setStatus("bad", `Failed: ${err.message}`);
         elExplainBox.textContent = "details: error";
       } finally {
         elPredictBtn.disabled = false;
@@ -549,7 +548,7 @@ E[stars]=${expStar.toFixed(3)}  maxP=${Math.max(...probs).toFixed(3)}`;
       elUseful.value = 2;
       elFunny.value = 0;
       elCool.value = 1;
-      setStatus("ok", "Contoh diisi. Klik “Prediksi Bintang”.");
+      setStatus("ok", "Example filled. Click “Predict Stars”.");
     });
 
     elClearBtn.addEventListener("click", () => {
@@ -562,7 +561,7 @@ E[stars]=${expStar.toFixed(3)}  maxP=${Math.max(...probs).toFixed(3)}`;
       renderBars([0,0,0,0,0]);
       elModelBox.textContent = "model: -";
       elExplainBox.textContent = "details: -";
-      setStatus("ok", "Form di-reset.");
+      setStatus("ok", "Reset done.");
     });
 
     // default render
@@ -575,7 +574,7 @@ E[stars]=${expStar.toFixed(3)}  maxP=${Math.max(...probs).toFixed(3)}`;
 </html>
 """
 
-# Inject API_URL safely
+# Inject API_URL safely into the HTML/JS
 HTML = HTML.replace("__API_URL_JS__", API_URL_JS)
 
 components.html(HTML, height=950, scrolling=True)
